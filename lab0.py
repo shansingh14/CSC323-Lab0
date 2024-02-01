@@ -26,7 +26,7 @@ def xor_bytes(var, key):
 
     return bytes(result)
 
-# Function to score the text
+# function to score the encoded text
 def score_encoded(byte_text):
 
     # got frequencies from https://en.wikipedia.org/wiki/Letter_frequency
@@ -53,7 +53,7 @@ def score_encoded(byte_text):
 
     return score
 
-
+# function to score plain text
 def score_plain(text):
      # got frequencies from https://en.wikipedia.org/wiki/Letter_frequency
     english_freq = {
@@ -85,15 +85,20 @@ def decrypt_single_byte(file_path):
     english_plaintext = ""
 
     for hex_string in hex_strings:
+        # Run through all possible keys (1-256)
         for key in range(256): 
+            # XOR and find score 
             decrypted_text = xor_bytes(bytes.fromhex(hex_string.strip()), bytes([key]))
             score = score_encoded(decrypted_text)
-
+            
+            # If the score is the heighier than the previous keys, set new best message and score
             if score > highest_score:
                 highest_score = score
                 english_plaintext = decrypted_text
 
     print(english_plaintext.decode('utf-8', errors='ignore'))
+
+#------------------------------------------------------------------------------------------------------
 
 # breaking text into chunks for comparision
 def init_chunks(ciphertxt, key_len):
@@ -105,7 +110,8 @@ def init_chunks(ciphertxt, key_len):
 
 
 # Using Kasiski's algorithm to estimate key length, https://en.wikipedia.org/wiki/Kasiski_examination
-def kasiski_key_length(ciphertxt, max_key_len=40):
+# Find common sequences of chunk (hamming distance)
+def kasiski_key_length(ciphertxt, max_key_len=20):
     key_scores = {}
     # Start at 2 as we know this isnt a single byte encryption
     for key_len in range(2, max_key_len + 1):
@@ -128,7 +134,8 @@ def kasiski_key_length(ciphertxt, max_key_len=40):
 
     return min(key_scores, key=key_scores.get)
 
-# Find correct key
+# find correct key
+# Go through possibly single byte keys and find the best byte
 def get_best_key(key_len, ciphertext):
     best_key = b""
 
@@ -166,10 +173,10 @@ def decrypt_multi_bytes(file_path):
     decrypted_txt = (xor_bytes(ciphertxt, xor_key)).decode('utf-8', errors='ignore')
 
     print(decrypted_txt)
+    print(best_key_len)
     print(xor_key.decode('utf-8', errors='ignore'))
 
 #----------------------------------------------------------------------------------------------
-
 
 def vigenere_decrypt(ciphertext, key):
     decrypted_text = ''
